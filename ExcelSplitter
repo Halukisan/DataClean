@@ -1,0 +1,66 @@
+package org.example;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+
+public class ExcelSplitter {
+    public static void main(String[] args) {
+        try {
+            // 读取原始Excel文件
+            FileInputStream file = new FileInputStream(new File("C:\\Users\\l50011273\\Desktop\\FusionServer 服务器 iBMC 告警处理 15.xlsx"));
+            Workbook workbook = new XSSFWorkbook(file);
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // 创建新的Excel工作簿
+            Workbook newWorkbook = new XSSFWorkbook();
+            Sheet newSheet = newWorkbook.createSheet("SplitData");
+
+            // 正则表达式，匹配以"ALM"开头并后跟11个字符的组合
+            String regex = "ALM\\w{11}";
+
+            // 遍历原始Excel文件的行
+            Iterator<Row> rowIterator = sheet.iterator();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                Cell cell = row.getCell(0); // 获取第一列的单元格
+                if (cell != null) {
+                    String cellValue = cell.getStringCellValue();
+//                    String content = cellValue.substring(14);
+                    // 使用正则表达式匹配数据
+                    String[] parts = cellValue.split("(?<=\\G.{14})"); // 分割成14个字符一组
+                    if (parts.length >= 1) {
+                        // 在新工作表中创建行
+                        Row newRow = newSheet.createRow(newSheet.getLastRowNum() + 1);
+                        // 设置第一列的数据（"ALM"开头的14个字符）
+                        newRow.createCell(0).setCellValue(parts[0]);
+                        // 设置第二列的数据（剩余的文字描述）
+                        if (parts.length > 1) {
+                            newRow.createCell(1).setCellValue(cellValue);
+                        } else {
+                            newRow.createCell(1).setCellValue("");
+                        }
+                    }
+                }
+            }
+
+            // 将新的工作簿写入文件
+            FileOutputStream outputStream = new FileOutputStream(new File("C:\\Users\\l50011273\\Desktop\\New2FusionServer 服务器 iBMC 告警处理 15.xlsx"));
+            newWorkbook.write(outputStream);
+            newWorkbook.close();
+
+            // 关闭原始工作簿和文件输入流
+            workbook.close();
+            file.close();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
