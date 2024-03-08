@@ -1,0 +1,63 @@
+package org.example;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+
+public class ExcelWriter {
+    public static void main(String[] args) {
+        try {
+            // 读取原始Excel文件
+            FileInputStream file = new FileInputStream(new File("C:\\Users\\l50011273\\Desktop\\小智语料库向量数据库语料.xlsx"));
+            Workbook workbook = new XSSFWorkbook(file);
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // 创建新的Excel工作簿
+            Workbook newWorkbook = new XSSFWorkbook();
+            Sheet newSheet = newWorkbook.createSheet("FilteredQuestions");
+
+            // 遍历原始Excel文件的行
+            Iterator<Row> rowIterator = sheet.iterator();
+            int newRowNum = 0; // 新工作表中的行号
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+
+                // 获取第一列的单元格
+                Cell cell = row.getCell(0);
+                if (cell != null) {
+                    // 获取单元格的字符串值
+                    String question = cell.getStringCellValue();
+                    // 检查是否以"ALM"开头
+                    if (!question.startsWith("ALM")) {
+                        // 在新工作表中创建行
+                        Row newRow = newSheet.createRow(newRowNum++);
+                        // 复制问题和回答到新工作表
+                        Cell newQuestionCell = newRow.createCell(0);
+                        newQuestionCell.setCellValue(question);
+                        Cell newAnswerCell = newRow.createCell(1);
+                        Cell answerCell = row.getCell(1);
+                        newAnswerCell.setCellValue(answerCell.getStringCellValue());
+                    }
+                }
+            }
+
+            // 将新的工作簿写入文件
+            FileOutputStream outputStream = new FileOutputStream(new File("C:\\Users\\l50011273\\Desktop\\New2小智语料库向量数据库语料.xlsx"));
+            newWorkbook.write(outputStream);
+            newWorkbook.close();
+
+            // 关闭原始工作簿和文件输入流
+            workbook.close();
+            file.close();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
